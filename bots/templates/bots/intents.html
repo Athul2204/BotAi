@@ -1,0 +1,46 @@
+{% extends 'home/layout.html' %}
+{% block title %}Intents | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Intents & Entities' %}
+<div class="bt-card bt-head"><b>{{ items.paginator.count }} Intents</b><button class="btn btn-primary" onclick="edit()"><i class="ti ti-plus"></i> New Intent</button></div>
+<div class="row g-3">
+{% for i in items %}
+  <div class="col-xl-4 col-md-6"><div class="bt-card item d-flex gap-3 align-items-center">
+    <div class="ic"><i class="ti ti-message"></i></div>
+    <div class="flex-grow-1"><div class="fw-semibold fs-5">{{ i.name }}</div><div class="text-muted">{{ i.examples.count }} training examples</div></div>
+    <button class="round" onclick="edit({{ i.id }})"><i class="ti ti-edit"></i></button>
+    <button class="round" style="background:#fde8ec;color:#d9344f" onclick="del({{ i.id }})"><i class="ti ti-trash"></i></button>
+  </div></div>
+{% empty %}<div class="col-12"><div class="bt-card p-5 text-center text-muted">No intents yet.</div></div>{% endfor %}
+</div>
+{% if items.paginator.num_pages > 1 %}<ul class="pagination justify-content-center mt-4">
+  {% for n in items.paginator.page_range %}<li class="page-item {% if n == items.number %}active{% endif %}"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>{% endfor %}</ul>{% endif %}
+
+<div class="mdl" id="m"><div class="box">
+  <div class="hd"><span id="mt">New Intent</span><button class="btn-close" onclick="closeM('m')"></button></div>
+  <div class="bd">
+    <label class="form-label fw-semibold">Intent name</label>
+    <input id="iname" class="form-control mb-3" placeholder="e.g. greet, book_appointment">
+    <label class="form-label fw-semibold">Training examples</label>
+    <div id="exs"></div>
+    <button class="btn btn-sm btn-soft-primary mt-2" onclick="addEx('')"><i class="ti ti-plus"></i> Add example</button>
+    <div class="text-muted small mt-3">Tag entities inline, e.g. <code>[Datascience](course)</code> — they are added to the domain automatically.</div>
+    <div class="err mt-2" id="err"></div>
+  </div>
+  <div class="ft"><button class="btn btn-light" onclick="closeM('m')">Cancel</button><button class="btn btn-primary" onclick="save()">Save</button></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const DATA = {{ data|safe }}; let cur=null;
+function addEx(v){const d=document.createElement('div');d.className='input-group mb-2';
+  d.innerHTML='<span class="input-group-text"><i class="ti ti-message-circle"></i></span><input class="form-control ex" placeholder="Type an example user message"><button class="btn btn-light border" type="button"><i class="ti ti-x"></i></button>';
+  d.querySelector('input').value=v; d.querySelector('button').onclick=()=>d.remove(); document.getElementById('exs').appendChild(d);}
+function edit(id){cur=id||null; const it=DATA.find(x=>x.id===id)||{name:'',examples:['']};
+  document.getElementById('mt').textContent=id?'Edit Intent':'New Intent'; document.getElementById('iname').value=it.name;
+  document.getElementById('exs').innerHTML=''; (it.examples.length?it.examples:['']).forEach(addEx); document.getElementById('err').textContent=''; openM('m');}
+async function save(){const r=await postJSON("{% url 'intent_save' bot.pk %}",{id:cur,name:document.getElementById('iname').value,examples:[...document.querySelectorAll('.ex')].map(e=>e.value)});
+  if(r.error) document.getElementById('err').textContent=r.error; else location.reload();}
+async function del(id){if(confirm('Delete this intent?')){await postJSON(`/chatbots/{{ bot.pk }}/intents/${id}/delete/`);location.reload();}}
+</script>
+{% endblock %}

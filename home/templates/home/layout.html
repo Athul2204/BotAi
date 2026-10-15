@@ -1,0 +1,65 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Botai{% endblock %}</title>
+  <meta name="csrf" content="{{ csrf_token }}" />
+  <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}" />
+  <link href="{% static 'assets/css/vendors.min.css' %}" rel="stylesheet" />
+  <link href="{% static 'assets/css/app.min.css' %}" rel="stylesheet" />
+  <link href="{% static 'assets/css/botai.css' %}" rel="stylesheet" />
+</head>
+<body class="bt">
+<aside class="bt-side">
+  <div class="brand"><i class="ti ti-robot"></i> Botai</div>
+  {% if bot %}
+    <h6>BOT EDITOR</h6>
+    <a href="{% url 'intents' bot.pk %}" class="{% if page == 'intents' %}on{% endif %}"><i class="ti ti-message"></i> Intents &amp; Entities</a>
+    <a href="{% url 'slots' bot.pk %}" class="{% if page == 'slots' %}on{% endif %}"><i class="ti ti-adjustments"></i> Slots</a>
+    <a href="{% url 'rules' bot.pk %}" class="{% if page == 'rules' %}on{% endif %}"><i class="ti ti-git-branch"></i> Rules</a>
+    <a href="{% url 'responses' bot.pk %}" class="{% if page == 'responses' %}on{% endif %}"><i class="ti ti-messages"></i> Responses</a>
+    <h6>ACTIVITIES</h6>
+    <a href="{% url 'run_bot' bot.pk %}" class="{% if page == 'run' %}on{% endif %}"><i class="ti ti-player-play"></i> Run bot</a>
+    <a href="{% url 'chats' bot.pk %}" class="{% if page == 'chats' %}on{% endif %}"><i class="ti ti-message-circle"></i> Chats</a>
+    <h6>ACCOUNT</h6>
+    <a href="{% url 'dashboard' %}"><i class="ti ti-arrow-left"></i> Back to Chatbots</a>
+  {% elif request.user.profile.role == 'admin' and request.resolver_match.url_name != 'dashboard' %}
+    <h6>ADMIN</h6>
+    <a href="{% url 'admin_dashboard' %}" class="{% if page == 'users' %}on{% endif %}"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+    <a href="{% url 'admin_requests' %}" class="{% if page == 'requests' %}on{% endif %}"><i class="ti ti-users"></i> User Requests {% if pending_count %}<span class="badge-new">{{ pending_count }}</span>{% endif %}</a>
+    <h6>ACCOUNT</h6>
+    <a href="{% url 'logout' %}"><i class="ti ti-logout"></i> Log Out</a>
+  {% else %}
+    <h6>MAIN</h6>
+    <a href="{% url 'dashboard' %}" class="on"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+    {% if request.user.profile.role == 'admin' %}<a href="{% url 'admin_dashboard' %}"><i class="ti ti-users"></i> Admin panel</a>{% endif %}
+    <h6>ACCOUNT</h6>
+    <a href="{% url 'logout' %}"><i class="ti ti-logout"></i> Log Out</a>
+  {% endif %}
+</aside>
+<div class="bt-main">
+  <header class="bt-top">
+    <div class="text-end lh-sm"><div class="fw-semibold">{{ request.user.first_name|default:request.user.email }}</div>
+      <small class="text-muted text-capitalize">{% if request.user.profile.role == 'admin' %}Admin Head{% else %}{{ request.user.profile.role }}{% endif %}</small></div>
+    <div class="av">{{ request.user.email|slice:":1"|upper }}</div>
+  </header>
+  <main class="bt-body">
+    {% for m in messages %}<div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} py-2">{{ m }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="px-4 py-3 text-muted bg-white border-top">© <script>document.write(new Date().getFullYear())</script> Botai</footer>
+</div>
+<script src="{% static 'assets/js/vendors.min.js' %}"></script>
+<script>
+const CSRF = document.querySelector('meta[name=csrf]').content;
+async function postJSON(url, data){
+  const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify(data||{})});
+  let j={}; try{j=await r.json()}catch(e){} if(!r.ok && !j.error) j.error='Request failed'; return j;
+}
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

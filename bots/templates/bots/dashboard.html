@@ -1,0 +1,38 @@
+{% extends 'home/layout.html' %}
+{% block title %}Dashboard | Botai{% endblock %}
+{% block content %}
+<div class="bt-card bt-head"><b>{{ total }} Chatbot{{ total|pluralize }}</b>
+  <button class="btn btn-primary" onclick="openM('newBot')"><i class="ti ti-plus"></i> New Chatbot</button></div>
+<div class="row g-3">
+{% for b in page_obj %}
+  <div class="col-xl-6"><div class="bt-card item">
+    <div class="d-flex gap-3">
+      <a href="{% url 'intents' b.pk %}" class="ic cyan text-white"><i class="ti ti-robot"></i></a>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between"><a href="{% url 'intents' b.pk %}" class="fw-semibold fs-5 text-dark">{{ b.name }}</a>
+          <span class="chip {% if b.train_status == 'trained' %}approved{% elif b.train_status == 'failed' %}rejected{% else %}pending{% endif %}">{{ b.train_status }}</span></div>
+        <div class="text-muted">{{ b.description|default:"Web Bot" }}</div>
+        <div class="mt-2 small text-muted">Created {{ b.created|date:"Y-m-d H:i" }} · {{ b.intents.count }} intents</div>
+      </div></div>
+    <div class="stat"><div><b class="text-dark">{{ b.messages.count }}</b><br>Messages</div>
+      <div class="text-center"><b class="text-dark">:{{ b.port }}</b><br>Rasa port</div>
+      <form method="post" action="{% url 'bot_delete' b.pk %}" onsubmit="return confirm('Delete {{ b.name|escapejs }}?')">{% csrf_token %}
+        <button class="btn btn-sm btn-outline-danger">Delete</button></form></div>
+  </div></div>
+{% empty %}<div class="col-12"><div class="bt-card p-5 text-center text-muted">No chatbots yet — click <b>New Chatbot</b>.</div></div>{% endfor %}
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<ul class="pagination justify-content-center mt-4">
+  {% for n in page_obj.paginator.page_range %}<li class="page-item {% if n == page_obj.number %}active{% endif %}"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>{% endfor %}
+</ul>{% endif %}
+
+<div class="mdl" id="newBot"><form class="box" method="post" action="{% url 'bot_create' %}">{% csrf_token %}
+  <div class="hd">New Chatbot <button type="button" class="btn-close" onclick="closeM('newBot')"></button></div>
+  <div class="bd">
+    <label class="form-label fw-semibold">Name</label><input name="name" class="form-control mb-3" required placeholder="e.g. support_bot">
+    <label class="form-label fw-semibold">Description</label><input name="description" class="form-control mb-3" placeholder="What does this bot do?">
+    <label class="form-label fw-semibold">Language</label><input name="language" class="form-control" value="en">
+  </div>
+  <div class="ft"><button type="button" class="btn btn-light" onclick="closeM('newBot')">Cancel</button><button class="btn btn-primary">Create</button></div>
+</form></div>
+{% endblock %}

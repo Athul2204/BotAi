@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-m3-(1wl%)*c0ug&biaci((wls5)my*%sp&jth#0npe0ff-d9+5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'home',
+    'bots',
 ]
 
 MIDDLEWARE = [
@@ -116,6 +117,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# ---- Botai ----
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+# Path to the rasa executable (set RASA_BIN env var if it is not on PATH)
+import os
+RASA_BIN = os.environ.get('RASA_BIN', 'rasa')
+RASA_BASE_PORT = int(os.environ.get('RASA_BASE_PORT', '5005'))
+RASA_PROJECTS_DIR = BASE_DIR / 'rasa_projects'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -1,0 +1,21 @@
+{% extends 'home/layout.html' %}
+{% block title %}Chats | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Chats' %}
+<div class="chatwrap">
+  <div class="bt-card sess">
+    {% for s in sessions %}
+      <a href="?s={{ s.id|urlencode }}" class="{% if s.id == selected %}on{% endif %}">
+        <div class="d-flex justify-content-between"><b>{% if s.source == 'test' %}Test session{% else %}Website visitor{% endif %}</b><small class="text-muted">{{ s.time|timesince }}</small></div>
+        <div class="text-muted small text-truncate">{{ s.last }}</div></a>
+    {% empty %}<div class="text-center text-muted p-4">No conversations yet.</div>{% endfor %}
+  </div>
+  <div class="bt-card d-flex flex-column">
+    <div class="p-3 border-bottom"><b>{% if selected %}{{ selected }}{% else %}Conversation{% endif %}</b> <span class="text-muted small">· {{ msgs|length }} messages</span></div>
+    <div class="msgs flex-grow-1">
+      {% for m in msgs %}<div class="bub {{ m.sender }}">{{ m.text }}<small>{{ m.created|date:"H:i" }}</small></div>{% endfor %}
+    </div>
+    <div class="p-3 border-top text-muted small">Read-only — conversations come from your website widget and the test chat.</div>
+  </div>
+</div>
+{% endblock %}

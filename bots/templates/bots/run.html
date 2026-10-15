@@ -1,0 +1,47 @@
+{% extends 'home/layout.html' %}
+{% block title %}Run bot | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Run bot' %}
+<div class="row g-3">
+  <div class="col-lg-6"><div class="bt-card p-4">
+    <h5 class="mb-3">1 · Train</h5>
+    <p class="text-muted">Generates <code>config.yml</code>, <code>domain.yml</code>, <code>data/nlu.yml</code>, <code>data/rules.yml</code> in <code>rasa_projects/bot_{{ bot.id }}/</code> and runs <code>rasa train</code>.</p>
+    <button class="btn btn-primary" id="bTrain" onclick="act('train')">Train bot</button>
+    <span class="ms-2">Status: <span id="ts" class="chip pending">{{ bot.train_status }}</span></span>
+    <div class="logbox mt-3" id="log" {% if not bot.train_log %}style="display:none"{% endif %}>{{ bot.train_log }}</div>
+    <hr class="my-4">
+    <h5 class="mb-3">2 · Run</h5>
+    <p class="text-muted">Starts <code>rasa run --enable-api --cors "*" -p {{ bot.port }}</code>.</p>
+    <button class="btn btn-success" onclick="act('start')">Start</button>
+    <button class="btn btn-outline-danger" onclick="act('stop')">Stop</button>
+    <span class="ms-2">Rasa: <span id="rs" class="chip rejected">stopped</span></span>
+    <div class="small text-muted mt-2" id="msg"></div>
+    <hr class="my-4">
+    <h5 class="mb-2">3 · Use on another website</h5>
+    <p class="text-muted mb-2">Paste this before <code>&lt;/body&gt;</code> on any site:</p>
+    <pre class="logbox user-select-all">&lt;script src="{{ origin }}/widget/{{ bot.public_key }}.js"&gt;&lt;/script&gt;</pre>
+    <div class="small text-muted">API: <code>POST {{ origin }}/api/chat/{{ bot.public_key }}/</code> with <code>{"session":"abc","message":"hi"}</code></div>
+  </div></div>
+  <div class="col-lg-6"><div class="bt-card p-3 d-flex flex-column" style="height:520px">
+    <b class="mb-2">Test chat</b>
+    <div class="msgs flex-grow-1" id="tm"></div>
+    <div class="input-group mt-2"><input id="ti" class="form-control" placeholder="Say something…" onkeydown="if(event.key==='Enter')sendT()"><button class="btn btn-primary" onclick="sendT()">Send</button></div>
+  </div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const SID=Math.random().toString(36).slice(2,8);
+async function act(a){const r=await postJSON(`/chatbots/{{ bot.pk }}/run/${a}/`); msg.textContent=r.message||''; poll();}
+async function poll(){const r=await (await fetch("{% url 'bot_status' bot.pk %}")).json();
+  ts.textContent=r.train_status; ts.className='chip '+({trained:'approved',failed:'rejected'}[r.train_status]||'pending');
+  rs.textContent=r.running?'running':'stopped'; rs.className='chip '+(r.running?'approved':'rejected');
+  if(r.train_log){log.style.display='block';log.textContent=r.train_log;}
+  bTrain.disabled=r.train_status==='training';}
+setInterval(poll,4000); poll();
+function add(t,w){const d=document.createElement('div');d.className='bub '+w;d.textContent=t;tm.appendChild(d);tm.scrollTop=tm.scrollHeight;}
+async function sendT(){const v=ti.value.trim();if(!v)return;ti.value='';add(v,'user');
+  const r=await postJSON("{% url 'bot_test_chat' bot.pk %}",{sid:SID,message:v});
+  if(r.error)add('⚠ '+r.error,'bot');(r.replies||[]).forEach(t=>add(t,'bot'));}
+</script>
+{% endblock %}

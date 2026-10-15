@@ -1,0 +1,36 @@
+{% extends 'home/layout.html' %}
+{% block title %}Responses | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Responses' %}
+<div class="bt-card bt-head"><b>{{ items|length }} Responses</b><button class="btn btn-primary" onclick="edit()"><i class="ti ti-plus"></i> New Response</button></div>
+<div class="row g-3">
+{% for r in items %}
+  <div class="col-xl-4 col-md-6"><div class="bt-card item">
+    <div class="d-flex justify-content-between"><div class="fw-semibold fs-5">{{ r.name }}</div>
+      <div><button class="round" onclick="edit({{ r.id }})"><i class="ti ti-edit"></i></button>
+      <button class="round" style="background:#fde8ec;color:#d9344f" onclick="del({{ r.id }})"><i class="ti ti-trash"></i></button></div></div>
+    <div class="text-muted mt-2">{{ r.texts.0|truncatechars:90 }}</div>
+    <div class="small text-muted mt-1">{{ r.texts|length }} variation{{ r.texts|length|pluralize }}</div>
+  </div></div>
+{% empty %}<div class="col-12"><div class="bt-card p-5 text-center text-muted">No responses yet.</div></div>{% endfor %}
+</div>
+<div class="mdl" id="m"><div class="box">
+  <div class="hd"><span id="mt">New Response</span><button class="btn-close" onclick="closeM('m')"></button></div>
+  <div class="bd">
+    <label class="form-label fw-semibold">Response name</label><input id="n" class="form-control mb-3" placeholder="utter_greet">
+    <label class="form-label fw-semibold">Reply variations (one per line)</label><textarea id="tx" rows="5" class="form-control"></textarea>
+    <div class="err mt-2" id="err"></div>
+  </div>
+  <div class="ft"><button class="btn btn-light" onclick="closeM('m')">Cancel</button><button class="btn btn-primary" onclick="save()">Save</button></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const DATA={{ data|safe }}; let cur=null;
+function edit(id){cur=id||null;const r=DATA.find(x=>x.id===id)||{name:'utter_',texts:[]};
+  mt.textContent=id?'Edit Response':'New Response'; n.value=r.name; tx.value=r.texts.join('\n'); err.textContent=''; openM('m');}
+async function save(){const r=await postJSON("{% url 'response_save' bot.pk %}",{id:cur,name:n.value,texts:tx.value.split('\n')});
+  if(r.error) err.textContent=r.error; else location.reload();}
+async function del(id){if(confirm('Delete this response?')){await postJSON(`/chatbots/{{ bot.pk }}/responses/${id}/delete/`);location.reload();}}
+</script>
+{% endblock %}

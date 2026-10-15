@@ -1,0 +1,27 @@
+{% extends 'home/layout.html' %}
+{% block title %}Users | Botai{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3"><h4 class="fw-bold mb-0">Users</h4><span class="bt-crumb">Admin &gt; Users</span></div>
+<div class="bt-card bt-head"><b>{{ profiles|length }} Users</b></div>
+<div class="row g-3">
+{% for p in profiles %}
+  <div class="col-xl-4 col-md-6"><div class="bt-card item">
+    <div class="d-flex gap-3 align-items-start">
+      <div class="ic {% if p.role == 'admin' %}pink{% endif %}"><i class="ti {% if p.role == 'admin' %}ti-shield{% else %}ti-user{% endif %}"></i></div>
+      <div class="flex-grow-1"><div class="d-flex justify-content-between"><b>{{ p.user.first_name|default:p.user.email }}</b>
+        <span class="chip {{ p.role }}">{{ p.role }}</span></div>
+        <div class="text-muted">{{ p.user.email }}</div>
+        <div class="mt-1"><span class="chip {{ p.status }}">{{ p.status }}</span></div></div>
+    </div>
+    <div class="stat"><div><b class="text-dark">{{ p.bots }}</b><br>Bots</div><div class="text-end"><b class="text-dark">{{ p.user.date_joined|date:"M j, Y" }}</b><br>Joined</div></div>
+    {% if p.user_id != request.user.id %}
+    <form method="post" class="d-flex gap-2 mt-4 pt-2">{% csrf_token %}<input type="hidden" name="next" value="{% url 'admin_dashboard' %}">
+      {% if p.status == 'rejected' %}<button formaction="{% url 'admin_action' p.pk 'approve' %}" class="btn btn-sm btn-success">Approve</button>
+      {% else %}<button formaction="{% url 'admin_action' p.pk 'reject' %}" class="btn btn-sm btn-outline-warning">Block</button>{% endif %}
+      <button formaction="{% url 'admin_action' p.pk 'makeadmin' %}" class="btn btn-sm btn-outline-secondary">{% if p.role == 'admin' %}Make viewer{% else %}Make admin{% endif %}</button>
+      <button formaction="{% url 'admin_action' p.pk 'delete' %}" class="btn btn-sm btn-outline-danger ms-auto" onclick="return confirm('Delete this user and all their bots?')">Delete</button>
+    </form>{% endif %}
+  </div></div>
+{% endfor %}
+</div>
+{% endblock %}

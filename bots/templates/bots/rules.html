@@ -1,0 +1,55 @@
+{% extends 'home/layout.html' %}
+{% block title %}Rules | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Rules' %}
+<div class="bt-card bt-head"><b>{{ items.paginator.count }} Rules</b><button class="btn btn-primary" onclick="edit()"><i class="ti ti-plus"></i> New Rule</button></div>
+<div class="row g-3">
+{% for r in items %}
+  <div class="col-xl-6"><div class="bt-card item d-flex gap-3 align-items-center">
+    <div class="ic cyan"><i class="ti ti-git-branch"></i></div>
+    <div class="flex-grow-1"><div class="fw-semibold">{{ r.name }}</div><div class="text-muted small">{{ r.steps|length }} steps</div></div>
+    <button class="round" onclick="edit({{ r.id }})"><i class="ti ti-edit"></i></button>
+    <button class="round" style="background:#fde8ec;color:#d9344f" onclick="del({{ r.id }})"><i class="ti ti-trash"></i></button>
+  </div></div>
+{% empty %}<div class="col-12"><div class="bt-card p-5 text-center text-muted">No rules yet.</div></div>{% endfor %}
+</div>
+<div class="mdl" id="m"><div class="box wide">
+  <div class="hd"><span id="mt">New Rule</span><button class="btn-close" onclick="closeM('m')"></button></div>
+  <div class="bd">
+    <label class="form-label fw-semibold">Rule name</label><input id="n" class="form-control mb-3">
+    <div class="d-flex gap-4 mb-3">
+      <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="st"><label class="form-check-label" for="st">Only at conversation start</label></div>
+      <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="wt" checked><label class="form-check-label" for="wt">Wait for user input afterwards</label></div>
+    </div>
+    <label class="form-label fw-semibold">Steps</label><div class="text-muted small mb-2">What happens, in order — usually a user intent followed by the bot's action.</div>
+    <div id="steps"></div>
+    <button class="btn btn-sm btn-soft-primary" onclick="addStep()"><i class="ti ti-plus"></i> Add step</button>
+    <datalist id="dl-intent"></datalist><datalist id="dl-action"></datalist>
+    <div class="err mt-2" id="err"></div>
+  </div>
+  <div class="ft"><button class="btn btn-light" onclick="closeM('m')">Cancel</button><button class="btn btn-primary" onclick="save()">Save</button></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const DATA={{ data|safe }}, INTENTS={{ intent_names|safe }}, ACTIONS={{ action_names|safe }}; let cur=null;
+dl_fill();
+function dl_fill(){document.getElementById('dl-intent').innerHTML=INTENTS.map(x=>`<option value="${esc(x)}">`).join('');
+  document.getElementById('dl-action').innerHTML=ACTIONS.map(x=>`<option value="${esc(x)}">`).join('');}
+function addStep(type,val){const d=document.createElement('div');d.className='input-group mb-2';
+  d.innerHTML=`<select class="form-select" style="max-width:180px"><option value="intent">Intent</option><option value="action">Action / response</option></select><input class="form-control" list="dl-${type||'intent'}"><button class="btn btn-light border up" type="button">↑</button><button class="btn btn-light border dn" type="button">↓</button><button class="btn btn-light border x" type="button"><i class="ti ti-x"></i></button>`;
+  const sel=d.querySelector('select'),inp=d.querySelector('input'); sel.value=type||'intent'; inp.value=val||'';
+  sel.onchange=()=>inp.setAttribute('list','dl-'+sel.value);
+  d.querySelector('.x').onclick=()=>d.remove();
+  d.querySelector('.up').onclick=()=>{if(d.previousElementSibling)d.parentNode.insertBefore(d,d.previousElementSibling)};
+  d.querySelector('.dn').onclick=()=>{if(d.nextElementSibling)d.parentNode.insertBefore(d.nextElementSibling,d)};
+  steps.appendChild(d);}
+function edit(id){cur=id||null;const r=DATA.find(x=>x.id===id)||{name:'',only_at_start:false,wait_for_user:true,steps:[{type:'intent',value:''},{type:'action',value:''}]};
+  mt.textContent=id?'Edit Rule':'New Rule'; n.value=r.name; st.checked=r.only_at_start; wt.checked=r.wait_for_user;
+  steps.innerHTML=''; r.steps.forEach(s=>addStep(s.type,s.value)); err.textContent=''; openM('m');}
+async function save(){const s=[...steps.children].map(d=>({type:d.querySelector('select').value,value:d.querySelector('input').value}));
+  const r=await postJSON("{% url 'rule_save' bot.pk %}",{id:cur,name:n.value,only_at_start:st.checked,wait_for_user:wt.checked,steps:s});
+  if(r.error) err.textContent=r.error; else location.reload();}
+async function del(id){if(confirm('Delete this rule?')){await postJSON(`/chatbots/{{ bot.pk }}/rules/${id}/delete/`);location.reload();}}
+</script>
+{% endblock %}

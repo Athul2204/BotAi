@@ -1,0 +1,38 @@
+{% extends 'home/layout.html' %}
+{% block title %}Slots | {{ bot.name }}{% endblock %}
+{% block content %}
+{% include 'bots/_crumb.html' with crumb='Slots' %}
+<div class="bt-card bt-head"><b>{{ items|length }} Slots</b><button class="btn btn-primary" onclick="edit()"><i class="ti ti-plus"></i> New Slot</button></div>
+<div class="row g-3">
+{% for s in items %}
+  <div class="col-xl-4 col-md-6"><div class="bt-card item d-flex gap-3 align-items-center">
+    <div class="ic"><i class="ti ti-adjustments"></i></div>
+    <div class="flex-grow-1"><div class="fw-semibold fs-5">{{ s.name }}</div><div class="text-muted">{{ s.type }}{% if s.from_entity %} · from entity “{{ s.from_entity }}”{% endif %}</div></div>
+    <button class="round" onclick="edit({{ s.id }})"><i class="ti ti-edit"></i></button>
+    <button class="round" style="background:#fde8ec;color:#d9344f" onclick="del({{ s.id }})"><i class="ti ti-trash"></i></button>
+  </div></div>
+{% empty %}<div class="col-12"><div class="bt-card p-5 text-center text-muted">No slots yet.</div></div>{% endfor %}
+</div>
+<div class="mdl" id="m"><div class="box">
+  <div class="hd"><span id="mt">New Slot</span><button class="btn-close" onclick="closeM('m')"></button></div>
+  <div class="bd">
+    <label class="form-label fw-semibold">Slot name</label><input id="n" class="form-control mb-3">
+    <label class="form-label fw-semibold">Type</label>
+    <select id="t" class="form-select mb-3"><option>text</option><option>float</option><option>bool</option><option>categorical</option><option>any</option></select>
+    <label class="form-label fw-semibold">Fill from entity (optional)</label><input id="fe" class="form-control mb-3" placeholder="entity name">
+    <div class="form-check"><input type="checkbox" class="form-check-input" id="inf"><label for="inf" class="form-check-label">Influence conversation</label></div>
+    <div class="err mt-2" id="err"></div>
+  </div>
+  <div class="ft"><button class="btn btn-light" onclick="closeM('m')">Cancel</button><button class="btn btn-primary" onclick="save()">Save</button></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const DATA={{ data|safe }}; let cur=null;
+function edit(id){cur=id||null;const s=DATA.find(x=>x.id===id)||{name:'',type:'text',from_entity:'',influence:false};
+  mt.textContent=id?'Edit Slot':'New Slot'; n.value=s.name; t.value=s.type; fe.value=s.from_entity; inf.checked=s.influence; err.textContent=''; openM('m');}
+async function save(){const r=await postJSON("{% url 'slot_save' bot.pk %}",{id:cur,name:n.value,type:t.value,from_entity:fe.value,influence:inf.checked});
+  if(r.error) err.textContent=r.error; else location.reload();}
+async function del(id){if(confirm('Delete this slot?')){await postJSON(`/chatbots/{{ bot.pk }}/slots/${id}/delete/`);location.reload();}}
+</script>
+{% endblock %}
