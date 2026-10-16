@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -118,14 +119,17 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
 # ---- Botai ----
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/dashboard/'
-# Path to the rasa executable (set RASA_BIN env var if it is not on PATH)
-import os
-RASA_BIN = os.environ.get('RASA_BIN', 'rasa')
+
+# Full path to the rasa executable (Rasa lives in its own Python 3.10 environment).
+# You can still override it with the RASA_BIN environment variable.
+RASA_BIN = os.environ.get('RASA_BIN', r'D:\ethqan\rasa-env\Scripts\rasa.exe')
 RASA_BASE_PORT = int(os.environ.get('RASA_BASE_PORT', '5005'))
 RASA_PROJECTS_DIR = BASE_DIR / 'rasa_projects'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

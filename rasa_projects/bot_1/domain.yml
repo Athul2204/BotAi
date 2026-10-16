@@ -1,0 +1,71 @@
+version: '3.1'
+intents:
+- affirm
+- ask_contact
+- ask_courses
+- ask_duration
+- ask_price
+- bot_challenge
+- course_info
+- deny
+- goodbye
+- greet
+- nlu_fallback
+entities:
+- course
+slots:
+  Angular:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  Dot_Net:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  Java:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  Python:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  React_Js:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  React_Native:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+responses:
+  utter_contact:
+  - text: You can reach us at info@ethqan.example or call +91 00000 00000.
+  utter_course_info:
+  - text: Great choice! {course} includes live classes, hands-on projects and placement
+      support.
+  utter_courses:
+  - text: We offer Data Science, Web Development, Cyber Security and Cloud & DevOps.
+      Which one interests you?
+  utter_default:
+  - text: Sorry, I didn’t understand that. You can ask about our courses, fees or
+      duration.
+  utter_duration:
+  - text: Most courses run for 3 to 6 months, with weekday and weekend batches.
+  utter_goodbye:
+  - text: Bye! Hope to see you soon 😊
+  utter_greet:
+  - text: Hey! 👋 Welcome to Ethqan Academy. How can I help you today?
+  utter_iamabot:
+  - text: I am a bot, powered by Rasa.
+  utter_price:
+  - text: Our course fees start at ₹25,000.
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

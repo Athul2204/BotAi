@@ -1,0 +1,58 @@
+version: '3.1'
+nlu:
+- intent: affirm
+  examples: |
+    - correct
+    - sure
+    - of course
+    - y
+    - yes
+- intent: ask_contact
+  examples: |
+    - how can i contact you
+    - give me your phone number
+    - what is your email
+- intent: ask_courses
+  examples: |
+    - what can i learn here
+    - show me your courses
+    - what courses do you offer
+- intent: ask_duration
+  examples: |
+    - duration of [Cyber Security](course)
+    - how many months
+    - how long is the course
+- intent: ask_price
+  examples: |
+    - price of [Web Development](course)
+    - what is the fee
+    - how much is the course
+- intent: bot_challenge
+  examples: |
+    - who are you
+    - are you a human?
+    - are you a bot?
+- intent: course_info
+  examples: |
+    - syllabus of [Cyber Security](course)
+    - i am interested in [Web Development](course)
+    - tell me about [Data Science](course),
+- intent: deny
+  examples: |
+    - not really
+    - never
+    - n
+    - no
+- intent: goodbye
+  examples: |
+    - have a nice day
+    - see you later
+    - goodbye
+    - bye
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey
+    - good morning
+    - hola

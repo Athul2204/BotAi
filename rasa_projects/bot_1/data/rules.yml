@@ -1,0 +1,39 @@
+version: '3.1'
+rules:
+- rule: greet
+  conversation_start: true
+  steps:
+  - intent: greet
+  - action: utter_greet
+- rule: goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+- rule: bot_challenge
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+- rule: ask_courses
+  steps:
+  - intent: ask_courses
+  - action: utter_courses
+- rule: course_info
+  steps:
+  - intent: course_info
+  - action: utter_course_info
+- rule: ask_price
+  steps:
+  - intent: ask_price
+  - action: utter_price
+- rule: nlu_fallback
+  steps:
+  - intent: nlu_fallback
+  - action: utter_default
+- rule: ask_contact
+  steps:
+  - intent: ask_contact
+  - action: utter_contact
+- rule: ask_duration
+  steps:
+  - intent: ask_duration
+  - action: utter_duration

@@ -95,6 +95,10 @@ def write_project(bot):
 
     resp = {r.name: [{'text': t} for t in r.texts if t.strip()] for r in bot.responses.all()}
 
+    # rules may reference the built-in fallback intent; it must exist in the domain
+    if any(st.get('type') == 'intent' and st.get('value') == 'nlu_fallback' for r in bot.rules.all() for st in r.steps):
+        intents.append('nlu_fallback')
+
     domain = {'version': '3.1', 'intents': intents}
     if entities:
         domain['entities'] = sorted(entities)
@@ -115,11 +119,18 @@ def write_project(bot):
         if d['steps']:
             rules.append(d)
 
-    (ws / 'config.yml').write_text(CONFIG.format(lang=bot.language, id=bot.id))
-    (ws / 'domain.yml').write_text(yaml.dump(domain, sort_keys=False, allow_unicode=True))
-    (ws / 'data' / 'nlu.yml').write_text(yaml.dump({'version': '3.1', 'nlu': nlu}, sort_keys=False, allow_unicode=True))
-    (ws / 'data' / 'rules.yml').write_text(yaml.dump({'version': '3.1', 'rules': rules}, sort_keys=False, allow_unicode=True))
+    (ws / 'config.yml').write_text(CONFIG.format(lang=bot.language, id=bot.id), encoding='utf-8')
+    (ws / 'domain.yml').write_text(yaml.dump(domain, sort_keys=False, allow_unicode=True), encoding='utf-8')
+    (ws / 'data' / 'nlu.yml').write_text(yaml.dump({'version': '3.1', 'nlu': nlu}, sort_keys=False, allow_unicode=True), encoding='utf-8')
+    (ws / 'data' / 'rules.yml').write_text(yaml.dump({'version': '3.1', 'rules': rules}, sort_keys=False, allow_unicode=True), encoding='utf-8')
     return ws
+
+
+def _env():
+    env = os.environ.copy()
+    env['PYTHONUTF8'] = '1'          # Rasa reads/writes UTF-8 even on Windows
+    env['PYTHONIOENCODING'] = 'utf-8'
+    return env
 
 
 def rasa_bin():
@@ -133,7 +144,7 @@ def _train_job(bot_id):
     try:
         proc = subprocess.run(
             [rasa_bin(), 'train', '--out', 'models', '--fixed-model-name', 'bot', '--force'],
-            cwd=ws, capture_output=True, text=True)
+            cwd=ws, capture_output=True, text=True, encoding='utf-8', errors='replace', env=_env())
         log = (proc.stdout or '') + '\n' + (proc.stderr or '')
         bot.train_status = 'trained' if proc.returncode == 0 else 'failed'
         bot.train_log = log[-6000:]
@@ -176,7 +187,7 @@ def start(bot):
     try:
         p = subprocess.Popen(
             [rasa_bin(), 'run', '--enable-api', '--cors', '*', '-p', str(bot.port), '-m', str(model)],
-            cwd=workspace(bot), stdout=log, stderr=log, **kw)
+            cwd=workspace(bot), stdout=log, stderr=log, env=_env(), **kw)
     except FileNotFoundError:
         return False, f'Could not find the "rasa" executable ({settings.RASA_BIN}).'
     bot.run_pid = p.pid
@@ -202,3 +213,11 @@ def send(bot, sender, message):
                       json={'sender': sender, 'message': message}, timeout=30)
     r.raise_for_status()
     return [m.get('text') for m in r.json() if m.get('text')]
+
+
+def rasa_available():
+    return shutil.which(settings.RASA_BIN) is not None or os.path.isfile(settings.RASA_BIN)
+
+
+def model_exists(bot):
+    return (workspace(bot) / 'models' / 'bot.tar.gz').exists()

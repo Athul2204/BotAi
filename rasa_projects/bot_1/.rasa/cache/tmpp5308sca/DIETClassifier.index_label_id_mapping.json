@@ -1,0 +1,12 @@
+{
+  "0": "affirm",
+  "1": "ask_contact",
+  "2": "ask_courses",
+  "3": "ask_duration",
+  "4": "ask_price",
+  "5": "bot_challenge",
+  "6": "course_info",
+  "7": "deny",
+  "8": "goodbye",
+  "9": "greet"
+}
